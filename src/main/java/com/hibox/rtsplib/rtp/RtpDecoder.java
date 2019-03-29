@@ -1,5 +1,7 @@
 package com.hibox.rtsplib.rtp;
 
+import android.util.Log;
+
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.CumulativeProtocolDecoder;
@@ -25,6 +27,8 @@ public class RtpDecoder extends CumulativeProtocolDecoder {
     private boolean parseRtp(IoBuffer in, ProtocolDecoderOutput out, IoSession session) throws CharacterCodingException {
         int p = in.position();
         int len = 0;
+//        byte[] bytes = in.array();
+//        FileUtils.writeResoursToSDCard(FileUtils.ROOT_PATH, "test.rtp",  Arrays.copyOf(bytes, in.limit()));
         Integer streamId = (Integer) session.getAttribute("streamId");
         if (streamId != null && streamId.intValue() == 2) {
             byte[] response1 = new byte[in.limit()];
@@ -74,6 +78,7 @@ public class RtpDecoder extends CumulativeProtocolDecoder {
                 out.write(response);
                 return true;
             } else {
+                Log.v("RtpDecoder","RtpDecoder false ");
                 return false;
             }
         }

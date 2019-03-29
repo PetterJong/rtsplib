@@ -5,8 +5,10 @@ import android.util.Log;
 
 import com.hibox.rtsplib.utils.Constant;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.mina.core.buffer.IoBuffer;
 
+import java.util.Arrays;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -109,8 +111,31 @@ public class VideoStreamImpl implements Runnable, VideoStreamInterface {
     }
 
     public void onVideoStream(byte[] stream) {
-        this.streams.add(stream);
-        this.waiteUp();
+//        this.streams.add(stream);
+//        this.waiteUp();
+        bundleUpFrame(stream);
+    }
+
+
+    private byte[] tempStream;
+    /**
+     * RTSP Interleaved Frame可能分成多个包发送
+     * 拼接数据包，部分摄像头厂商的数据包是分包发的
+     */
+    private void bundleUpFrame(byte[] stream){
+        IoBuffer frame = IoBuffer.wrap(stream);
+        byte hflag  = frame.get();
+        byte channelIden = frame.get();
+        if(hflag == 36 && channelIden == 0) { // 来了一条新报文
+            if(tempStream != null){
+                this.streams.add(tempStream);
+                this.waiteUp();
+            }
+            tempStream = stream;
+        } else {
+            tempStream =  ArrayUtils.addAll(tempStream, stream);
+        }
+        frame.clear();
     }
 
     private synchronized void waiteUp() {
